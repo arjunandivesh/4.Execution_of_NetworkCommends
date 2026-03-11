@@ -25,8 +25,70 @@ This commands includes
 <BR>
 • Other IP Commands e.g. show ip route etc.
 <BR>
+## PROGRAM
+
+## SERVER.PY
+```
+import socket
+import subprocess
+
+host = "127.0.0.1"
+port = 8000
+
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.bind((host, port))
+server.listen(1)
+
+print("Server is running...")
+conn, addr = server.accept()
+print("Client connected:", addr)
+
+while True:
+    data = conn.recv(1024).decode()
+
+    if data.lower() == "exit":
+        print("Client disconnected")
+        break
+
+    try:
+        output = subprocess.getoutput(f"ping -n 2 {data}")
+        conn.send(output.encode())
+    except:
+        conn.send("Unable to ping the host".encode())
+
+conn.close()
+server.close()
+```
+
+## CLIENT.PY
+```
+import socket
+
+host = "127.0.0.1"
+port = 8000
+
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client.connect((host, port))
+
+print("Connected to server")
+
+while True:
+    site = input("Enter website to ping (or type exit): ")
+
+    client.send(site.encode())
+
+    if site.lower() == "exit":
+        break
+
+    result = client.recv(4096).decode()
+    print("\nPing Result:\n", result)
+
+client.close()
+```
 
 ## Output
+
+<img width="1472" height="657" alt="image" src="https://github.com/user-attachments/assets/1d76c44f-59dc-447b-b17e-5626d3f5ad9d" />
 
 ## Result
 Thus Execution of Network commands Performed 
