@@ -30,65 +30,58 @@ This commands includes
 ## SERVER.PY
 ```
 import socket
-import subprocess
 
-host = "127.0.0.1"
-port = 8000
+# DNS records (simulated database)
+dns_table = {
+    "google.com": "142.250.190.78",
+    "yahoo.com": "98.137.11.163",
+    "openai.com": "104.18.12.123",
+    "example.com": "93.184.216.34"
+}
+# Create UDP socket
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind((host, port))
-server.listen(1)
+# Bind server to localhost and port
+server_socket.bind(("127.0.0.1", 15353))
 
-print("Server is running...")
-conn, addr = server.accept()
-print("Client connected:", addr)
+print("DNS Server running on port 5353...\n")
 
 while True:
-    data = conn.recv(1024).decode()
-
-    if data.lower() == "exit":
-        print("Client disconnected")
-        break
-
-    try:
-        output = subprocess.getoutput(f"ping -n 2 {data}")
-        conn.send(output.encode())
-    except:
-        conn.send("Unable to ping the host".encode())
-
-conn.close()
-server.close()
+    # Receive domain request from client
+    message, client_address = server_socket.recvfrom(1024)
+    domain = message.decode()
+    print("Request received for:", domain)
+    # Check DNS table
+    ip = dns_table.get(domain, "Domain not found")
+    # Send response back to client
+    server_socket.sendto(ip.encode(), client_address)
 ```
 
 ## CLIENT.PY
 ```
 import socket
+# Create UDP socket
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+server_address = ("127.0.0.1", 15353)
 
-host = "127.0.0.1"
-port = 8000
+# Get domain name from user
+domain = input("Enter domain name: ")
 
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect((host, port))
+# Send request to server
+client_socket.sendto(domain.encode(), server_address)
 
-print("Connected to server")
+# Receive response
+ip_address, server = client_socket.recvfrom(1024)
 
-while True:
-    site = input("Enter website to ping (or type exit): ")
+print("IP Address:", ip_address.decode())
 
-    client.send(site.encode())
-
-    if site.lower() == "exit":
-        break
-
-    result = client.recv(4096).decode()
-    print("\nPing Result:\n", result)
-
-client.close()
+client_socket.close()
 ```
 
 ## Output
 
-<img width="1472" height="657" alt="image" src="https://github.com/user-attachments/assets/1d76c44f-59dc-447b-b17e-5626d3f5ad9d" />
+<img width="1480" height="274" alt="image" src="https://github.com/user-attachments/assets/a9cbb684-c8f2-4eeb-9962-4f76358d6f4a" />
+
 
 ## Result
 Thus Execution of Network commands Performed 
